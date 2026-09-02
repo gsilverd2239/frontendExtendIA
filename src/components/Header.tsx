@@ -26,7 +26,7 @@ function getInitials(name?: string): string {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  title = 'Gestión de Almacén',
+  title = 'Conversion',
   session,
   theme = 'dark',
   onToggleTheme,

@@ -184,13 +184,13 @@ export const BusinessLineManagementModal: React.FC<BusinessLineManagementModalPr
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-base font-bold tracking-tight">Gestión de Líneas de Negocio</h2>
-                // <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                //   convertia."OPRC"
-                // </span>
+                {/* <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                   convertia."OPRC"
+                 </span> */}
               </div>
-              // <p className="text-xs text-gray-400 mt-0.5">
-              //   Mantenimiento de centros de costo y líneas de negocio por esquema
-              // </p>
+               {/* <p className="text-xs text-gray-400 mt-0.5">
+                 Mantenimiento de centros de costo y líneas de negocio por esquema
+              </p> */}
             </div>
           </div>
 

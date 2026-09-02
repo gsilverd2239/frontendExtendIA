@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {isOpen && <span className="truncate">Inventario</span>}
             </button>
 
-            <button
+            {/* <button
               id="nav-tab-history"
               onClick={() => {
                 onSelectTab('history');
@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <BarChart3 className="w-5 h-5 shrink-0" />
               {isOpen && <span className="truncate">Costos y Trazas</span>}
-            </button>
+            </button> */}
 
             {/* Ajustes Menu (Visible ONLY for Superusers) */}
             {isSuperUser && (

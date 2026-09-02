@@ -181,13 +181,13 @@ export const SchemaManagementModal: React.FC<SchemaManagementModalProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-base font-bold tracking-tight">Gestión de Esquemas de base de datos</h2>
-                // <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                //   convertia."SRGC"
-                // </span>
+                 {/* <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                   convertia."SRGC"
+                 </span> */}
               </div>
-              // <p className="text-xs text-gray-400 mt-0.5">
-              //   Administración de bases de datos y empresas autorizadas en el sistema
-              // </p>
+               {/* <p className="text-xs text-gray-400 mt-0.5">
+                 Administración de bases de datos y empresas autorizadas en el sistema
+               </p> */}
             </div>
           </div>
 

@@ -209,9 +209,9 @@ export const WarehouseManagementModal: React.FC<WarehouseManagementModalProps> =
             </div>
             <div>
               <h2 className="text-base font-bold tracking-tight">Gestión de Almacenes</h2>
-              // <p className="text-xs text-gray-400 font-mono">
-              //   Mapeo en base de datos PostgreSQL <span className="text-sky-400">convertia."OWHS"</span>
-              // </p>
+              {/* <p className="text-xs text-gray-400 font-mono">
+                 Mapeo en base de datos PostgreSQL <span className="text-sky-400">convertia."OWHS"</span>
+               </p> */}
             </div>
           </div>
           <button

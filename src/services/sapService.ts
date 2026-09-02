@@ -450,35 +450,15 @@ class SAPService {
       }
       return result;
     } catch (e: any) {
-      console.warn('Excepción en executeConvertIA, ejecutando reintento con respaldo en servidor:', e);
-      // Secondary attempt with force isDemoMode to ensure Postgres DB logging
-      try {
-        const fallbackRes = await fetch(getApiUrl('/api/sap/convertia'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            warehouseCode,
-            targetWarehouseCode,
-            selectedItems,
-            schema: activeSchema,
-            isDemoMode: true,
-          }),
-        });
-        const fallbackData = await fallbackRes.json();
-        if (fallbackData && fallbackData.success) {
-          return fallbackData;
-        }
-      } catch (fbErr) {
-        console.error('Fallback server call failed:', fbErr);
-      }
-
+      console.error('Excepción en executeConvertIA:', e);
       throw e;
     }
   }
 
   public async executeConversion(payload: ConversionExecutionPayload): Promise<SAPConversionResult> {
+    let response;
     try {
-      const response = await fetch('/api/sap/execute-conversion', {
+      response = await fetch('/api/sap/execute-conversion', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -489,50 +469,25 @@ class SAPService {
           session: this.currentSession,
         }),
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        this.saveConversionToLocalHistory(result);
-        this.deductLocalInventory(payload);
-        return result;
-      }
-    } catch (e) {
-      console.warn('Direct backend conversion unavailable, simulating locally:', e);
+    } catch (e: any) {
+      console.error('Error de red al ejecutar conversión:', e);
+      throw new Error(`Error de red: ${e.message}`);
     }
 
-    // Fallback simulated execution with realistic SAP Doc numbers
-    const newDocEntryIssue = Math.floor(3000 + Math.random() * 500);
-    const newDocNumIssue = Math.floor(10000 + Math.random() * 900);
-    const newDocEntryReceipt = Math.floor(4000 + Math.random() * 500);
-    const newDocNumReceipt = Math.floor(20000 + Math.random() * 900);
-    const newJournalTrans = Math.floor(5800 + Math.random() * 300);
-
-    const result: SAPConversionResult = {
-      id: 'conv-' + Date.now().toString(36),
-      goodsIssueDocEntry: newDocEntryIssue,
-      goodsIssueDocNum: newDocNumIssue,
-      goodsReceiptDocEntry: newDocEntryReceipt,
-      goodsReceiptDocNum: newDocNumReceipt,
-      journalEntryNumber: newJournalTrans,
-      docDate: new Date().toISOString().split('T')[0],
-      timestamp: Date.now(),
-      sourceWarehouse: payload.sourceWarehouse,
-      targetWarehouse: payload.targetWarehouse,
-      targetItemCode: payload.targetItemCode,
-      targetItemName: payload.targetItemName,
-      targetQuantity: payload.targetQuantity,
-      targetBatchNumber: payload.targetBatchNumber,
-      targetSerialNumber: payload.targetSerialNumber,
-      targetUnitCost: payload.targetUnitCost,
-      totalCost: payload.totalCost,
-      consumedComponents: payload.consumedComponents,
-      status: 'Success',
-      message: `Documentos generados en SAP B1: Salida de Mercancías #${newDocNumIssue} y Entrada de Mercancías #${newDocNumReceipt} con Asiento #${newJournalTrans}`,
-    };
-
-    this.saveConversionToLocalHistory(result);
-    this.deductLocalInventory(payload);
-    return result;
+    if (response.ok) {
+      const result = await response.json();
+      this.saveConversionToLocalHistory(result);
+      this.deductLocalInventory(payload);
+      return result;
+    } else {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = {};
+      }
+      throw new Error(errorData.error || errorData.message || `Error HTTP ${response.status}`);
+    }
   }
 
   private saveConversionToLocalHistory(record: SAPConversionResult) {

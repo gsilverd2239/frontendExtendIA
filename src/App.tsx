@@ -203,7 +203,7 @@ export default function App() {
         <Header
           title={
             currentTab === 'conversion' 
-              ? 'Gestión de Almacén' 
+              ? 'Conversión de Almacén' 
               : currentTab === 'inventory' 
               ? 'Catálogo & Stocks de Almacén' 
               : 'Trazabilidad y Costos SAP B1'
