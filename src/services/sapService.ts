@@ -146,6 +146,7 @@ class SAPService {
       if (response.ok && data.success) {
         this.currentSession = data.session;
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.session));
+        window.dispatchEvent(new Event('sap_activity'));
         return { success: true, session: data.session, user: data.user };
       } else {
         // If credentials specified demo mode or server fallback is acceptable
@@ -389,9 +390,22 @@ class SAPService {
     return INITIAL_FINISHED_GOODS;
   }
 
-  public async getHistory(): Promise<SAPConversionResult[]> {
+  public async getHistory(startDate?: string, endDate?: string, schema?: string): Promise<SAPConversionResult[]> {
     try {
-      const response = await fetch(getApiUrl('/api/sap/history'));
+      let url = '/api/sap/history';
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      const activeSchema = schema || this.currentSession?.companyDB || (this.currentSession as any)?.BD || 'FG_PROD';
+      params.append('schema', activeSchema);
+      
+      const queryStr = params.toString();
+      if (queryStr) {
+        url += `?${queryStr}`;
+      }
+
+      const response = await fetch(getApiUrl(url));
       const contentType = response.headers.get('content-type') || '';
       if (response.ok && contentType.includes('application/json')) {
         const data = await response.json();
@@ -440,8 +454,13 @@ class SAPService {
         }),
       });
 
+      if (response.status === 401) {
+        window.dispatchEvent(new Event('sap_session_expired'));
+      }
+
       const result: ConvertIAResult = await response.json();
       if (response.ok && result.success) {
+        window.dispatchEvent(new Event('sap_activity'));
         return result;
       }
 
@@ -487,6 +506,51 @@ class SAPService {
         errorData = {};
       }
       throw new Error(errorData.error || errorData.message || `Error HTTP ${response.status}`);
+    }
+  }
+
+  public async continueConversion(nroConv: number, schema?: string): Promise<{ success: boolean; message: string; estadoActual?: string }> {
+    if (!this.currentSession) {
+      this.loadStoredSession();
+    }
+    const session = this.currentSession;
+    const activeSchema = schema || session?.companyDB || (session as any)?.BD || localStorage.getItem('tandempro_schema') || localStorage.getItem('convertia_schema') || 'FG_PROD';
+    const activeSessionId = session?.sessionId || (session as any)?.SessionId || (session as any)?.b1session || '';
+
+    try {
+      const response = await fetch(getApiUrl('/api/sap/continue-conversion'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SAP-Session': activeSessionId,
+          'X-SAP-CompanyDB': activeSchema,
+        },
+        body: JSON.stringify({
+          nroConv,
+          schema: activeSchema,
+          session: session,
+        }),
+      });
+
+      if (response.status === 401) {
+        window.dispatchEvent(new Event('sap_session_expired'));
+      }
+
+      let result;
+      const text = await response.text();
+      try {
+        result = JSON.parse(text);
+      } catch (err) {
+        throw new Error(`Respuesta del servidor no válida (HTTP ${response.status}): ${text.substring(0, 100)}`);
+      }
+
+      if (!result.success || !response.ok) {
+        throw new Error(result.message || (result as any).error || `Error en servidor SAP (HTTP ${response.status})`);
+      }
+      return result;
+    } catch (e: any) {
+      console.error('Error al continuar conversión:', e);
+      throw e;
     }
   }
 

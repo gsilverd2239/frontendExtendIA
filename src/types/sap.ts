@@ -172,6 +172,9 @@ export interface InventoryItem {
   WarehouseStock: number; // Stock en almacén activo
   CostoTotal?: number;
   ArticuloEquivalente?: string;
+  DescEquivalente?: string;
+  Activo?: boolean;
+  Valido?: boolean;
   CantidadEquivalente?: number;
   CostoEquivUnitario?: number;
   UnidadNegocio?: string;

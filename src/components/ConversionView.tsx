@@ -5,7 +5,7 @@ import { Search, Hash, QrCode, Check, ArrowRight, Layers, Info, RefreshCw, Loade
 import { BatchSerialSelectorModal } from './BatchSerialSelectorModal';
 import { formatCurrencyGs, formatQuantityPy } from '../utils/formatters';
 
-export const WAREHOUSE_MAPPING: Record<string, string> = {
+const WAREHOUSE_MAPPING: Record<string, string> = {
   'CAM-OPE': 'CAM-VEN',
   'CLI-OPE': 'CLI-VEN',
   'CDE-OPE': 'CDE-VEN',
@@ -257,7 +257,9 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
   // Helper to check if an item has "SIN EQUIVALENCIA"
   const isSinEquivalencia = (item: InventoryItem) => {
     const artEq = String(item.ArticuloEquivalente || (item as any).ArtEq || '').trim();
-    return !artEq || artEq === 'SIN EQUIVALENCIA' || artEq === '-';
+    if (!artEq || artEq === 'SIN EQUIVALENCIA' || artEq === '-') return true;
+    if (item.Activo === false || item.Valido === false) return true;
+    return false;
   };
 
   // Check if all selectable filtered items are selected
@@ -570,8 +572,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
         <div className={`absolute inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-[2px] transition-all animate-fadeIn ${theme === 'dark' ? 'bg-black/50' : 'bg-white/70'
           }`}>
           <div className={`px-6 py-4 rounded-2xl border flex items-center space-x-3 shadow-xl transition-all ${theme === 'dark'
-              ? 'bg-[#181a20] border-gray-800 text-white shadow-black/80'
-              : 'bg-white border-slate-200 text-slate-800 shadow-slate-300/40'
+            ? 'bg-[#181a20] border-gray-800 text-white shadow-black/80'
+            : 'bg-white border-slate-200 text-slate-800 shadow-slate-300/40'
             }`}>
             <Loader2 className="w-5 h-5 text-sky-500 animate-spin shrink-0" />
             <span className={`text-sm font-semibold tracking-tight ${theme === 'dark' ? 'text-gray-100' : 'text-slate-800'}`}>
@@ -588,13 +590,13 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* CARD 1: FILTRO POR ALMACEN */}
           <div className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-colors ${theme === 'dark'
-              ? 'bg-[#151619] border-gray-800'
-              : 'bg-white border-slate-200 shadow-sm'
+            ? 'bg-[#151619] border-gray-800'
+            : 'bg-white border-slate-200 shadow-sm'
             }`}>
             <div className="flex items-start space-x-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 mt-0.5 ${theme === 'dark'
-                  ? 'bg-sky-500/10 border-sky-500/20 text-sky-400'
-                  : 'bg-sky-50 border-sky-200 text-sky-600'
+                ? 'bg-sky-500/10 border-sky-500/20 text-sky-400'
+                : 'bg-sky-50 border-sky-200 text-sky-600'
                 }`}>
                 <WarehouseIcon className="w-4 h-4" />
               </div>
@@ -633,8 +635,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 value={selectedWarehouse}
                 onChange={(e) => onSelectWarehouse(e.target.value)}
                 className={`w-full appearance-none border rounded-xl px-3 py-2 pr-10 text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm transition-all ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-sky-400 hover:border-gray-600'
-                    : 'bg-white border-slate-300 text-sky-700 hover:border-slate-400'
+                  ? 'bg-gray-900 border-gray-700 text-sky-400 hover:border-gray-600'
+                  : 'bg-white border-slate-300 text-sky-700 hover:border-slate-400'
                   }`}
               >
                 {warehouses.map((wh) => (
@@ -655,14 +657,14 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
           {/* CARD 2: FILTRO POR LINEA DE NEGOCIO (convertia."OPRC") */}
           <div className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-colors ${theme === 'dark'
-              ? 'bg-[#151619] border-gray-800'
-              : 'bg-white border-slate-200 shadow-sm'
+            ? 'bg-[#151619] border-gray-800'
+            : 'bg-white border-slate-200 shadow-sm'
             }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${theme === 'dark'
-                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
-                    : 'bg-purple-50 border-purple-200 text-purple-600'
+                  ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                  : 'bg-purple-50 border-purple-200 text-purple-600'
                   }`}>
                   <Layers className="w-4 h-4" />
                 </div>
@@ -719,15 +721,15 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                       key={bl.PrcCode}
                       onClick={() => handleToggleBusinessLine(bl.PrcCode)}
                       className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-medium transition-all cursor-pointer select-none ${isChecked
-                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold shadow-sm'
-                          : theme === 'dark'
-                            ? 'bg-gray-900/60 border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-300'
-                            : 'bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800'
+                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold shadow-sm'
+                        : theme === 'dark'
+                          ? 'bg-gray-900/60 border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-300'
+                          : 'bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800'
                         }`}
                     >
                       <div className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-colors ${isChecked
-                          ? 'bg-emerald-500 text-white border border-emerald-500'
-                          : theme === 'dark' ? 'border border-gray-700 bg-gray-900' : 'border border-slate-300 bg-white'
+                        ? 'bg-emerald-500 text-white border border-emerald-500'
+                        : theme === 'dark' ? 'border border-gray-700 bg-gray-900' : 'border border-slate-300 bg-white'
                         }`}>
                         {isChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                       </div>
@@ -759,8 +761,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
               Artículos Disponibles (Lotes/Series)
             </h3>
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono ${theme === 'dark'
-                ? 'bg-gray-800 text-sky-400'
-                : 'bg-sky-100 text-sky-800 font-semibold'
+              ? 'bg-gray-800 text-sky-400'
+              : 'bg-sky-100 text-sky-800 font-semibold'
               }`}>
               {filteredItems.length}
             </span>
@@ -774,8 +776,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 type="button"
                 onClick={() => setFilterType('all')}
                 className={`px-3 py-1 rounded-lg transition-colors font-medium ${filterType === 'all'
-                    ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
-                    : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
+                  : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
               >
                 Todos
@@ -784,8 +786,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 type="button"
                 onClick={() => setFilterType('batches')}
                 className={`px-3 py-1 rounded-lg transition-colors font-medium ${filterType === 'batches'
-                    ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
-                    : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
+                  : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
               >
                 Lotes
@@ -794,8 +796,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 type="button"
                 onClick={() => setFilterType('serials')}
                 className={`px-3 py-1 rounded-lg transition-colors font-medium ${filterType === 'serials'
-                    ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
-                    : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
+                  : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
               >
                 Series
@@ -811,8 +813,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Filtrar artículo..."
                 className={`border rounded-xl pl-8 pr-3 py-1.5 text-xs w-44 sm:w-56 focus:outline-none focus:ring-1 focus:ring-sky-500 ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-800 text-white placeholder-gray-500'
-                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                  ? 'bg-gray-900 border-gray-800 text-white placeholder-gray-500'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
                   }`}
               />
               <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5 pointer-events-none" />
@@ -822,8 +824,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
               onClick={onRefreshInventory}
               title="Recargar datos de SAP"
               className={`p-2 border rounded-xl transition-colors cursor-pointer ${theme === 'dark'
-                  ? 'bg-gray-900 hover:bg-gray-800 border-gray-800 text-gray-400 hover:text-white'
-                  : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-600 shadow-sm'
+                ? 'bg-gray-900 hover:bg-gray-800 border-gray-800 text-gray-400 hover:text-white'
+                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-600 shadow-sm'
                 }`}
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-sky-500' : ''}`} />
@@ -833,14 +835,14 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
         {/* Table Container */}
         <div className={`rounded-2xl border flex-1 overflow-hidden flex flex-col shadow-lg transition-colors ${theme === 'dark'
-            ? 'bg-[#151619] border-gray-800'
-            : 'bg-white border-slate-200 shadow-slate-200/50'
+          ? 'bg-[#151619] border-gray-800'
+          : 'bg-white border-slate-200 shadow-slate-200/50'
           }`}>
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse" id="sap-inventory-table">
               <thead className={`text-[11px] uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm border-b ${theme === 'dark'
-                  ? 'bg-black/50 text-gray-400 border-gray-800'
-                  : 'bg-slate-50 text-slate-500 border-slate-200'
+                ? 'bg-black/50 text-gray-400 border-gray-800'
+                : 'bg-slate-50 text-slate-500 border-slate-200'
                 }`}>
                 <tr className="h-10">
                   <th className="px-3 w-10 text-center">
@@ -859,10 +861,13 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                   </th>
                   <th className="px-3">CODIGO_SAP</th>
                   <th className="px-4">DESCRIPCION</th>
+                  <th className="px-3 text-center">ACTIVO</th>
                   <th className="px-3">LOTE / SERIE</th>
                   <th className="px-3 text-right">DISPONIBLE</th>
                   <th className="px-3 text-right">COST_OTOTAL</th>
                   <th className="px-3">ART_EQUIVALENTE</th>
+                  <th className="px-3">DESC_EQUIVALENTE</th>
+                  <th className="px-3 text-center">VÁLIDO</th>
                   <th className="px-3 text-right">CANT_EQUIVALENTE</th>
                   <th className="px-3 text-right">COST_EQUIV_UNITARIO</th>
                   <th className="px-3 text-center">UNIDAD_NEGOCIO</th>
@@ -872,7 +877,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 }`}>
                 {isBusy ? (
                   <tr>
-                    <td colSpan={10} className="py-20 text-center">
+                    <td colSpan={13} className="py-20 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <div className={`p-4 rounded-full ${theme === 'dark' ? 'bg-sky-500/10 border border-sky-500/30' : 'bg-sky-50 border border-sky-200'}`}>
                           <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
@@ -890,7 +895,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                   </tr>
                 ) : selectedBusinessLines.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-20 text-center">
+                    <td colSpan={13} className="py-20 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <div className={`p-4 rounded-full ${theme === 'dark' ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-purple-50 border border-purple-200'}`}>
                           <Layers className="w-8 h-8 text-purple-400 stroke-1" />
@@ -908,7 +913,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-20 text-center">
+                    <td colSpan={13} className="py-20 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <div className={`p-4 rounded-full ${theme === 'dark' ? 'bg-gray-900 border border-gray-800' : 'bg-slate-100 border border-slate-200'}`}>
                           <Boxes className="w-8 h-8 text-gray-400 stroke-1" />
@@ -946,16 +951,16 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                         key={item.ItemCode}
                         onClick={() => handleToggleRow(item)}
                         className={`h-12 transition-all ${noEqu
+                          ? theme === 'dark'
+                            ? 'opacity-45 bg-gray-950/50 hover:bg-gray-950/70 cursor-not-allowed'
+                            : 'opacity-50 bg-slate-100/80 hover:bg-slate-100 cursor-not-allowed'
+                          : isSelected
                             ? theme === 'dark'
-                              ? 'opacity-45 bg-gray-950/50 hover:bg-gray-950/70 cursor-not-allowed'
-                              : 'opacity-50 bg-slate-100/80 hover:bg-slate-100 cursor-not-allowed'
-                            : isSelected
-                              ? theme === 'dark'
-                                ? 'bg-sky-500/10 hover:bg-sky-500/15 border-l-2 border-l-sky-400 cursor-pointer'
-                                : 'bg-sky-50/80 hover:bg-sky-50 border-l-2 border-l-sky-600 cursor-pointer'
-                              : theme === 'dark'
-                                ? 'hover:bg-gray-800/40 text-gray-300 cursor-pointer'
-                                : 'hover:bg-slate-50 text-slate-700 cursor-pointer'
+                              ? 'bg-sky-500/10 hover:bg-sky-500/15 border-l-2 border-l-sky-400 cursor-pointer'
+                              : 'bg-sky-50/80 hover:bg-sky-50 border-l-2 border-l-sky-600 cursor-pointer'
+                            : theme === 'dark'
+                              ? 'hover:bg-gray-800/40 text-gray-300 cursor-pointer'
+                              : 'hover:bg-slate-50 text-slate-700 cursor-pointer'
                           }`}
                       >
                         {/* Selection Checkbox */}
@@ -970,10 +975,10 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                           ) : (
                             <div
                               className={`w-4 h-4 rounded flex items-center justify-center transition-colors mx-auto ${isSelected
-                                  ? 'bg-sky-500 border border-sky-500 text-black'
-                                  : theme === 'dark'
-                                    ? 'border border-gray-700 bg-gray-900/60'
-                                    : 'border border-slate-300 bg-white'
+                                ? 'bg-sky-500 border border-sky-500 text-black'
+                                : theme === 'dark'
+                                  ? 'border border-gray-700 bg-gray-900/60'
+                                  : 'border border-slate-300 bg-white'
                                 }`}
                             >
                               {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -988,8 +993,13 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
                         {/* DESCRIPCION */}
                         <td className={`px-4 font-medium text-xs truncate max-w-[200px] ${theme === 'dark' ? 'text-gray-300' : 'text-slate-800'
-                          }`}>
+                          }`} title={item.ItemName}>
                           {item.ItemName}
+                        </td>
+
+                        {/* ACTIVO */}
+                        <td className="px-3 text-center">
+                          <input type="checkbox" checked={item.Activo !== false} readOnly className="pointer-events-none w-3.5 h-3.5 accent-sky-500" />
                         </td>
 
                         {/* LOTE / SERIE */}
@@ -997,8 +1007,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                           {isLote ? (
                             <span
                               className={`px-2 py-0.5 rounded-full text-[11px] font-semibold mono inline-flex items-center space-x-1 ${theme === 'dark'
-                                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                                  : 'bg-amber-50 text-amber-800 border border-amber-300 shadow-sm'
+                                ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                : 'bg-amber-50 text-amber-800 border border-amber-300 shadow-sm'
                                 }`}
                             >
                               <Hash className="w-3 h-3 text-amber-400" />
@@ -1007,8 +1017,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                           ) : isSerie ? (
                             <span
                               className={`px-2 py-0.5 rounded-full text-[11px] font-semibold mono inline-flex items-center space-x-1 ${theme === 'dark'
-                                  ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
-                                  : 'bg-sky-50 text-sky-800 border border-sky-300 shadow-sm'
+                                ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
+                                : 'bg-sky-50 text-sky-800 border border-sky-300 shadow-sm'
                                 }`}
                             >
                               <QrCode className="w-3 h-3 text-sky-400" />
@@ -1017,8 +1027,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                           ) : (
                             <span
                               className={`px-2 py-0.5 rounded-full text-[11px] font-semibold mono inline-flex items-center space-x-1 ${theme === 'dark'
-                                  ? 'bg-gray-800 text-gray-400 border border-gray-700'
-                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                ? 'bg-gray-800 text-gray-400 border border-gray-700'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
                                 }`}
                             >
                               <span>Estándar</span>
@@ -1041,19 +1051,30 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
                         {/* ART_EQUIVALENTE */}
                         <td className="px-3 text-xs mono font-medium whitespace-nowrap">
-                          {noEqu ? (
+                          {!item.ArticuloEquivalente || item.ArticuloEquivalente === 'SIN EQUIVALENCIA' ? (
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center space-x-1 ${theme === 'dark'
-                                ? 'bg-red-500/15 text-red-400 border border-red-500/30'
-                                : 'bg-red-50 text-red-700 border border-red-200 shadow-sm'
+                              ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                              : 'bg-red-50 text-red-700 border border-red-200 shadow-sm'
                               }`}>
                               <Lock className="w-2.5 h-2.5 shrink-0" />
                               <span>SIN EQUIVALENCIA</span>
                             </span>
                           ) : (
-                            <span className={theme === 'dark' ? 'text-purple-300' : 'text-purple-700'}>
+                            <span className={theme === 'dark' ? 'text-purple-300' : 'text-purple-700'} title={item.DescEquivalente}>
                               {item.ArticuloEquivalente}
                             </span>
                           )}
+                        </td>
+
+                        {/* DESC_EQUIVALENTE */}
+                        <td className={`px-3 text-xs font-medium truncate max-w-[200px] ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'
+                          }`} title={item.DescEquivalente}>
+                          {item.DescEquivalente || ''}
+                        </td>
+
+                        {/* VALIDO */}
+                        <td className="px-3 text-center">
+                          <input type="checkbox" checked={item.Valido !== false} readOnly className="pointer-events-none w-3.5 h-3.5 accent-sky-500" />
                         </td>
 
                         {/* CANT_EQUIVALENTE (Quantity: '.' thousands, ',' decimals) */}
@@ -1071,8 +1092,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                         {/* UNIDAD_NEGOCIO */}
                         <td className="px-3 text-center whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold mono inline-flex items-center space-x-1 ${theme === 'dark'
-                              ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
-                              : 'bg-purple-50 text-purple-800 border border-purple-300 shadow-sm'
+                            ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                            : 'bg-purple-50 text-purple-800 border border-purple-300 shadow-sm'
                             }`}>
                             <span>{item.UnidadNegocio || 'PAPAS'}</span>
                           </span>
@@ -1087,8 +1108,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
           {/* Table Footer */}
           <div className={`px-6 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${theme === 'dark'
-              ? 'bg-black/40 border-gray-800 text-gray-400'
-              : 'bg-slate-50 border-slate-200 text-slate-600'
+            ? 'bg-black/40 border-gray-800 text-gray-400'
+            : 'bg-slate-50 border-slate-200 text-slate-600'
             }`}>
             <span>
               Mostrando <strong className={theme === 'dark' ? 'text-gray-200' : 'text-slate-900'}>{filteredItems.length}</strong> artículos en almacén{' '}
@@ -1107,10 +1128,10 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                 onClick={() => setComponentAllocations({})}
                 disabled={consumedComponentsList.length === 0}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-semibold inline-flex items-center space-x-1.5 transition-all ${consumedComponentsList.length > 0
-                    ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 cursor-pointer shadow-sm'
-                    : theme === 'dark'
-                      ? 'bg-gray-900/40 border-gray-800 text-gray-600 cursor-not-allowed opacity-50'
-                      : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                  ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 cursor-pointer shadow-sm'
+                  : theme === 'dark'
+                    ? 'bg-gray-900/40 border-gray-800 text-gray-600 cursor-not-allowed opacity-50'
+                    : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
                   }`}
                 title="Desmarcar todos los artículos seleccionados"
               >
@@ -1175,8 +1196,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
             <div className="space-y-3 mb-6">
               {/* Step 1 */}
               <div className={`p-3 rounded-xl border flex items-center space-x-3 transition-all ${convertIAStep >= 1
-                  ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
-                  : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
+                ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
+                : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}>
                 {convertIAStep > 1 ? (
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1190,8 +1211,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
               {/* Step 2 */}
               <div className={`p-3 rounded-xl border flex items-center space-x-3 transition-all ${convertIAStep >= 2
-                  ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
-                  : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
+                ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
+                : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}>
                 {convertIAStep > 2 ? (
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1205,8 +1226,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
               {/* Step 3 */}
               <div className={`p-3 rounded-xl border flex items-center space-x-3 transition-all ${convertIAStep >= 3
-                  ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
-                  : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
+                ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
+                : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}>
                 {convertIAStep > 3 ? (
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1220,8 +1241,8 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
 
               {/* Step 4 */}
               <div className={`p-3 rounded-xl border flex items-center space-x-3 transition-all ${convertIAStep >= 4
-                  ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
-                  : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
+                ? theme === 'dark' ? 'bg-sky-500/10 border-sky-500/30 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-900'
+                : theme === 'dark' ? 'bg-gray-900/40 border-gray-800 text-gray-500' : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}>
                 {convertIAStep === 4 ? (
                   <Loader2 className="w-4 h-4 text-sky-400 animate-spin shrink-0" />
@@ -1318,12 +1339,12 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 animate-bounce-short">
           <div className={`p-4 rounded-2xl border shadow-2xl flex items-start space-x-3 max-w-md backdrop-blur-md transition-all ${toastMessage.type === 'success'
-              ? theme === 'dark'
-                ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200'
-                : 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-emerald-200/50'
-              : theme === 'dark'
-                ? 'bg-sky-950/90 border-sky-500/40 text-sky-200'
-                : 'bg-sky-50 border-sky-300 text-sky-900 shadow-sky-200/50'
+            ? theme === 'dark'
+              ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200'
+              : 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-emerald-200/50'
+            : theme === 'dark'
+              ? 'bg-sky-950/90 border-sky-500/40 text-sky-200'
+              : 'bg-sky-50 border-sky-300 text-sky-900 shadow-sky-200/50'
             }`}>
             <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">

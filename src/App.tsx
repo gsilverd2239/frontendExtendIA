@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  SAPSession, 
-  SapUser, 
-  Warehouse, 
-  InventoryItem, 
-  FinishedGoodItem, 
-  SAPConversionResult, 
-  ConversionExecutionPayload 
+import { Toaster } from 'react-hot-toast';
+import {
+  SAPSession,
+  SapUser,
+  Warehouse,
+  InventoryItem,
+  FinishedGoodItem,
+  SAPConversionResult,
+  ConversionExecutionPayload
 } from './types/sap';
-import { 
-  INITIAL_WAREHOUSES, 
-  INITIAL_ITEMS, 
-  INITIAL_FINISHED_GOODS, 
-  INITIAL_CONVERSION_HISTORY 
+import {
+  INITIAL_WAREHOUSES,
+  INITIAL_ITEMS,
+  INITIAL_FINISHED_GOODS,
+  INITIAL_CONVERSION_HISTORY
 } from './data/mockSapData';
 import { sapService } from './services/sapService';
 import { Sidebar } from './components/Sidebar';
@@ -20,6 +21,7 @@ import { Header } from './components/Header';
 import { ConversionView } from './components/ConversionView';
 import { InventoryView } from './components/InventoryView';
 import { HistoryTraceView } from './components/HistoryTraceView';
+import { ConversionDetailsView } from './components/ConversionDetailsView';
 import LoginScreen from './components/LoginScreen';
 import { LoginModal } from './components/LoginModal';
 import { SuccessConversionModal } from './components/SuccessConversionModal';
@@ -33,7 +35,7 @@ export default function App() {
   const [isWarehouseMgmtModalOpen, setIsWarehouseMgmtModalOpen] = useState<boolean>(false);
   const [isSchemaMgmtModalOpen, setIsSchemaMgmtModalOpen] = useState<boolean>(false);
   const [isBusinessLineMgmtModalOpen, setIsBusinessLineMgmtModalOpen] = useState<boolean>(false);
-  const [currentTab, setCurrentTab] = useState<'conversion' | 'inventory' | 'history'>('conversion');
+  const [currentTab, setCurrentTab] = useState<'conversion' | 'inventory' | 'history' | 'conversion_details'>('conversion');
 
   // Sidebar starts collapsed by default as requested
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -177,11 +179,10 @@ export default function App() {
   }
 
   return (
-    <div className={`flex h-screen w-full transition-colors duration-200 overflow-hidden font-sans relative ${
-      theme === 'dark' 
-        ? 'bg-[#0B0C10] text-[#C5C6C7]' 
-        : 'bg-[#F3F2EF] text-slate-800'
-    }`}>
+    <div className={`flex h-screen w-full transition-colors duration-200 overflow-hidden font-sans relative ${theme === 'dark'
+      ? 'bg-[#0B0C10] text-[#C5C6C7]'
+      : 'bg-[#F3F2EF] text-slate-800'
+      }`}>
       {/* Persistent Sidebar (Starts Collapsed, Expands as Overlay) */}
       <Sidebar
         currentTab={currentTab}
@@ -202,11 +203,11 @@ export default function App() {
         {/* Top Header */}
         <Header
           title={
-            currentTab === 'conversion' 
-              ? 'Conversión de Almacén' 
-              : currentTab === 'inventory' 
-              ? 'Catálogo & Stocks de Almacén' 
-              : 'Trazabilidad y Costos SAP B1'
+            currentTab === 'conversion'
+              ? 'Conversión de Almacén'
+              : currentTab === 'inventory'
+                ? 'Catálogo & Stocks de Almacén'
+                : 'Trazabilidad SAP B1'
           }
           session={session}
           onOpenLogin={() => setIsSwitchDbModalOpen(true)}
@@ -245,10 +246,14 @@ export default function App() {
           )}
 
           {currentTab === 'history' && (
-            <HistoryTraceView 
-              history={historyRecords} 
+            <HistoryTraceView
+              history={historyRecords}
               theme={theme}
             />
+          )}
+
+          {currentTab === 'conversion_details' && (
+            <ConversionDetailsView theme={theme} />
           )}
         </main>
       </div>
@@ -293,6 +298,7 @@ export default function App() {
         activeSchema={session?.companyDB || 'FG_DESARROLLO'}
         theme={theme}
       />
+      <Toaster position="bottom-right" />
     </div>
   );
 }

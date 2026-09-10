@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { SAPSession } from '../types/sap';
-import { Layers, Boxes, BarChart3, LogOut, ShieldCheck, Database, X, Settings, ChevronDown, ChevronRight, Warehouse } from 'lucide-react';
+import { UserCog, Layers, Boxes, BarChart3, LogOut, ShieldCheck, Database, X, Settings, ChevronDown, ChevronRight, Warehouse } from 'lucide-react';
 
 interface SidebarProps {
-  currentTab: 'conversion' | 'inventory' | 'history';
-  onSelectTab: (tab: 'conversion' | 'inventory' | 'history') => void;
+  currentTab: 'conversion' | 'inventory' | 'history' | 'conversion_details';
+  onSelectTab: (tab: 'conversion' | 'inventory' | 'history' | 'conversion_details') => void;
   session: SAPSession | null;
   onLogout: () => void;
   onOpenSettings?: () => void;
@@ -29,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
 }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(true);
+  const [isOperationsOpen, setIsOperationsOpen] = useState<boolean>(true);
 
   // Superuser check: SUPERUSER === 'Y' (or fallback for manager)
   const isSuperUser = (session?.SUPERUSER || '').toUpperCase() === 'Y' || session?.userName?.toLowerCase() === 'manager';
@@ -39,6 +40,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   });
 
   useEffect(() => {
+    const handleSapActivity = () => {
+      setTimeLeft({
+        minutes: session?.sessionTimeout || 29,
+        seconds: 59,
+      });
+    };
+
+    const handleSessionExpired = () => {
+      onLogout();
+    };
+
+    window.addEventListener('sap_activity', handleSapActivity);
+    window.addEventListener('sap_session_expired', handleSessionExpired);
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev.seconds > 0) {
@@ -51,8 +66,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('sap_activity', handleSapActivity);
+      window.removeEventListener('sap_session_expired', handleSessionExpired);
+    };
+  }, [session, onLogout]);
 
   return (
     <>
@@ -66,15 +85,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Floating Overlay Sidebar Panel (Starts Collapsed w-16, Expands to Floating Overlay w-64) */}
-      <aside 
+      <aside
         id="app-sidebar"
-        className={`fixed top-3 left-3 bottom-3 z-50 flex flex-col justify-between py-5 transition-all duration-300 ease-in-out border rounded-2xl shadow-2xl ${
-          isOpen ? 'w-64 px-4' : 'w-16 px-2'
-        } ${
-          theme === 'dark' 
-            ? 'bg-[#121316]/95 border-gray-800 text-gray-200 backdrop-blur-xl shadow-black/80' 
+        className={`fixed top-3 left-3 bottom-3 z-50 flex flex-col justify-between py-5 transition-all duration-300 ease-in-out border rounded-2xl shadow-2xl ${isOpen ? 'w-64 px-4' : 'w-16 px-2'
+          } ${theme === 'dark'
+            ? 'bg-[#121316]/95 border-gray-800 text-gray-200 backdrop-blur-xl shadow-black/80'
             : 'bg-white/95 border-slate-200 text-slate-800 backdrop-blur-xl shadow-slate-300/50'
-        }`}
+          }`}
       >
         <div className="space-y-6">
           {/* Brand & Close Action */}
@@ -85,9 +102,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   E
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h1 className={`font-bold tracking-tight text-base leading-tight ${
-                    theme === 'dark' ? 'text-white' : 'text-slate-900'
-                  }`}>
+                  <h1 className={`font-bold tracking-tight text-base leading-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'
+                    }`}>
                     Extend<span className="text-sky-500">IA</span>
                   </h1>
                   <p className="text-[9px] text-sky-500 uppercase font-bold tracking-widest truncate">
@@ -97,11 +113,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {onClose && (
                   <button
                     onClick={onClose}
-                    className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                      theme === 'dark'
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-800 border-gray-800'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
-                    }`}
+                    className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${theme === 'dark'
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-800 border-gray-800'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
+                      }`}
                     title="Cerrar menú"
                   >
                     <X className="w-4 h-4" />
@@ -119,28 +134,70 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Navigation Items */}
           <nav className="space-y-2 pt-1" id="sidebar-navigation">
-            <button
-              id="nav-tab-conversion"
-              onClick={() => {
-                onSelectTab('conversion');
-                if (onClose) onClose();
-              }}
-              title="Conversión"
-              className={`w-full p-2.5 rounded-xl font-medium flex items-center ${
-                !isOpen ? 'justify-center' : 'space-x-3'
-              } text-xs transition-all text-left cursor-pointer ${
-                currentTab === 'conversion'
-                  ? theme === 'dark'
-                    ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold shadow-sm'
-                    : 'bg-sky-50 text-sky-700 border border-sky-200 font-bold shadow-sm'
-                  : theme === 'dark'
-                    ? 'text-gray-400 hover:text-white hover:bg-gray-900/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <Layers className="w-5 h-5 shrink-0" />
-              {isOpen && <span className="truncate">Conversión</span>}
-            </button>
+            <div className="space-y-1">
+              <button
+                id="nav-menu-operations"
+                onClick={() => setIsOperationsOpen(!isOperationsOpen)}
+                title="Operaciones"
+                className={`w-full p-2.5 rounded-xl font-medium flex items-center justify-between text-xs transition-all text-left cursor-pointer ${theme === 'dark'
+                  ? 'text-sky-400 hover:bg-sky-500/10'
+                  : 'text-sky-700 hover:bg-sky-50'
+                  }`}
+              >
+                <div className={`flex items-center ${!isOpen ? 'justify-center w-full' : 'space-x-3'}`}>
+                  <Layers className="w-5 h-5 shrink-0" />
+                  {isOpen && <span className="font-bold truncate">Operaciones</span>}
+                </div>
+                {isOpen && (
+                  isOperationsOpen ? <ChevronDown className="w-4 h-4 text-sky-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-sky-400 shrink-0" />
+                )}
+              </button>
+
+              {/* Submenus when open */}
+              {isOpen && isOperationsOpen && (
+                <div className="pl-4 space-y-1 animate-fadeIn">
+                  <button
+                    id="nav-tab-conversion"
+                    onClick={() => {
+                      onSelectTab('conversion');
+                      if (onClose) onClose();
+                    }}
+                    title="Conversión"
+                    className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${currentTab === 'conversion'
+                      ? theme === 'dark'
+                        ? 'bg-sky-500/10 text-sky-400 font-bold shadow-sm'
+                        : 'bg-sky-50 text-sky-700 font-bold shadow-sm'
+                      : theme === 'dark'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                  >
+                    <Layers className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span className="truncate">Conversión</span>
+                  </button>
+
+                  <button
+                    id="nav-tab-conversion-details"
+                    onClick={() => {
+                      onSelectTab('conversion_details');
+                      if (onClose) onClose();
+                    }}
+                    title="Detalle Conversion"
+                    className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${currentTab === 'conversion_details'
+                      ? theme === 'dark'
+                        ? 'bg-sky-500/10 text-sky-400 font-bold shadow-sm'
+                        : 'bg-sky-50 text-sky-700 font-bold shadow-sm'
+                      : theme === 'dark'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                  >
+                    <BarChart3 className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span className="truncate">Detalle Conversion</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               id="nav-tab-inventory"
@@ -149,17 +206,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 if (onClose) onClose();
               }}
               title="Inventario"
-              className={`w-full p-2.5 rounded-xl font-medium flex items-center ${
-                !isOpen ? 'justify-center' : 'space-x-3'
-              } text-xs transition-all text-left cursor-pointer ${
-                currentTab === 'inventory'
+              className={`w-full p-2.5 rounded-xl font-medium flex items-center ${!isOpen ? 'justify-center' : 'space-x-3'
+                } text-xs transition-all text-left cursor-pointer ${currentTab === 'inventory'
                   ? theme === 'dark'
                     ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold shadow-sm'
                     : 'bg-sky-50 text-sky-700 border border-sky-200 font-bold shadow-sm'
                   : theme === 'dark'
                     ? 'text-gray-400 hover:text-white hover:bg-gray-900/60'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+                }`}
             >
               <Boxes className="w-5 h-5 shrink-0" />
               {isOpen && <span className="truncate">Inventario</span>}
@@ -172,17 +227,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 if (onClose) onClose();
               }}
               title="Costos y Trazas"
-              className={`w-full p-2.5 rounded-xl font-medium flex items-center ${
-                !isOpen ? 'justify-center' : 'space-x-3'
-              } text-xs transition-all text-left cursor-pointer ${
-                currentTab === 'history'
+              className={`w-full p-2.5 rounded-xl font-medium flex items-center ${!isOpen ? 'justify-center' : 'space-x-3'
+                } text-xs transition-all text-left cursor-pointer ${currentTab === 'history'
                   ? theme === 'dark'
                     ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold shadow-sm'
                     : 'bg-sky-50 text-sky-700 border border-sky-200 font-bold shadow-sm'
                   : theme === 'dark'
                     ? 'text-gray-400 hover:text-white hover:bg-gray-900/60'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+                }`}
             >
               <BarChart3 className="w-5 h-5 shrink-0" />
               {isOpen && <span className="truncate">Costos y Trazas</span>}
@@ -195,14 +248,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   id="nav-tab-settings"
                   onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                   title="Ajustes (Super Usuario)"
-                  className={`w-full p-2.5 rounded-xl font-medium flex items-center justify-between text-xs transition-all text-left cursor-pointer ${
-                    theme === 'dark'
-                      ? 'text-sky-400 hover:bg-sky-500/10'
-                      : 'text-sky-700 hover:bg-sky-50'
-                  }`}
+                  className={`w-full p-2.5 rounded-xl font-medium flex items-center justify-between text-xs transition-all text-left cursor-pointer ${theme === 'dark'
+                    ? 'text-sky-400 hover:bg-sky-500/10'
+                    : 'text-sky-700 hover:bg-sky-50'
+                    }`}
                 >
                   <div className={`flex items-center ${!isOpen ? 'justify-center w-full' : 'space-x-3'}`}>
-                    <Settings className="w-5 h-5 shrink-0" />
+                    <UserCog className="w-5 h-5 shrink-0" />
                     {isOpen && <span className="font-bold truncate">Ajustes</span>}
                   </div>
                   {isOpen && (
@@ -220,11 +272,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         if (onClose) onClose();
                       }}
                       title="Gestión de Almacenes"
-                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${theme === 'dark'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
                     >
                       <Warehouse className="w-4 h-4 text-sky-400 shrink-0" />
                       <span className="truncate">Gestión de Almacenes</span>
@@ -237,11 +288,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         if (onClose) onClose();
                       }}
                       title="Gestión de Esquemas"
-                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${theme === 'dark'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
                     >
                       <Database className="w-4 h-4 text-indigo-400 shrink-0" />
                       <span className="truncate">Gestión de Esquemas</span>
@@ -254,11 +304,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         if (onClose) onClose();
                       }}
                       title="Gestión de Líneas de Negocios"
-                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                      className={`w-full p-2 rounded-xl flex items-center space-x-2.5 text-xs transition-all cursor-pointer ${theme === 'dark'
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
                     >
                       <Layers className="w-4 h-4 text-purple-400 shrink-0" />
                       <span className="truncate">Gestión de Líneas de Negocios</span>
@@ -274,11 +323,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-3">
           {/* Service Layer Status Card */}
           {isOpen ? (
-            <div className={`p-3.5 rounded-xl space-y-2 border ${
-              theme === 'dark'
-                ? 'bg-[#181a20] border-gray-800'
-                : 'bg-slate-50 border-slate-200'
-            }`}>
+            <div className={`p-3.5 rounded-xl space-y-2 border ${theme === 'dark'
+              ? 'bg-[#181a20] border-gray-800'
+              : 'bg-slate-50 border-slate-200'
+              }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs text-green-500 font-semibold">
                   <span className="relative flex h-2 w-2">
@@ -294,9 +342,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
 
-              <div className={`flex items-center justify-between text-[10px] ${
-                theme === 'dark' ? 'text-gray-400' : 'text-slate-600'
-              }`}>
+              <div className={`flex items-center justify-between text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-slate-600'
+                }`}>
                 <span className="flex items-center space-x-1 truncate">
                   <Database className="w-3 h-3 text-sky-500 shrink-0" />
                   <span className="mono truncate">{session?.companyDB || 'SBO_PROD'}</span>
@@ -306,12 +353,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </span>
               </div>
 
-              <div className={`pt-1 border-t flex items-center justify-between ${
-                theme === 'dark' ? 'border-gray-800' : 'border-slate-200'
-              }`}>
-                <p className={`text-[10px] mono uppercase ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-slate-400'
+              <div className={`pt-1 border-t flex items-center justify-between ${theme === 'dark' ? 'border-gray-800' : 'border-slate-200'
                 }`}>
+                <p className={`text-[10px] mono uppercase ${theme === 'dark' ? 'text-gray-500' : 'text-slate-400'
+                  }`}>
                   Exp: {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s
                 </p>
                 <ShieldCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />
@@ -331,13 +376,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             id="btn-logout-sap"
             onClick={onLogout}
             title="Cerrar Sesión SAP"
-            className={`w-full flex items-center ${
-              !isOpen ? 'justify-center p-2.5' : 'justify-center space-x-2 p-2'
-            } text-xs transition-all cursor-pointer rounded-xl ${
-              theme === 'dark'
+            className={`w-full flex items-center ${!isOpen ? 'justify-center p-2.5' : 'justify-center space-x-2 p-2'
+              } text-xs transition-all cursor-pointer rounded-xl ${theme === 'dark'
                 ? 'text-gray-400 hover:text-red-400 hover:bg-red-950/20 border border-transparent hover:border-red-900/30'
                 : 'text-slate-600 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200'
-            }`}
+              }`}
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {isOpen && <span>Cerrar Sesión SAP</span>}

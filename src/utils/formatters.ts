@@ -24,12 +24,12 @@ export const formatQuantityPy = (value: number | string | null | undefined, maxD
   if (value == null) return '0';
   const num = typeof value === 'number' ? value : Number(value);
   if (isNaN(num)) return '0';
-  
+
   const numStr = num.toString();
   const [intStr, decStr] = numStr.split('.');
-  
+
   const formattedInt = intStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  
+
   if (decStr && maxDecimals > 0) {
     const trimmedDec = decStr.slice(0, maxDecimals);
     if (trimmedDec.length > 0) {
