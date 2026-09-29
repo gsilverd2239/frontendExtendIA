@@ -41,7 +41,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
   theme = 'dark',
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'batches' | 'serials'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'batches' | 'serials' | 'none'>('all');
 
   // Business Lines state (OPRC from PostgreSQL)
   const [businessLines, setBusinessLines] = useState<BusinessLine[]>([]);
@@ -167,14 +167,19 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
   // Filter items in current warehouse
   const filteredItems = useMemo(() => {
     return effectiveItems.filter((item) => {
+      const codeStr = String(item.ItemCode || '');
+      const nameStr = String(item.ItemName || '');
+      const searchStr = searchTerm.toLowerCase();
+
       const matchSearch =
-        item.ItemCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.ItemName.toLowerCase().includes(searchTerm.toLowerCase());
+        codeStr.toLowerCase().includes(searchStr) ||
+        nameStr.toLowerCase().includes(searchStr);
 
       if (!matchSearch) return false;
 
-      if (filterType === 'batches') return item.ManageBatchNumbers === 'tYES';
-      if (filterType === 'serials') return item.ManageSerialNumbers === 'tYES';
+      if (filterType === 'batches') return item.LoteSerie === 'Lote' || (item.ManageBatchNumbers === 'tYES' && item.LoteSerie !== 'Serie' && item.LoteSerie !== 'Ninguno');
+      if (filterType === 'serials') return item.LoteSerie === 'Serie' || (item.ManageSerialNumbers === 'tYES' && item.LoteSerie !== 'Lote' && item.LoteSerie !== 'Ninguno');
+      if (filterType === 'none') return item.LoteSerie === 'Ninguno' || ((item.ManageBatchNumbers === 'tNO' || !item.ManageBatchNumbers) && (item.ManageSerialNumbers === 'tNO' || !item.ManageSerialNumbers) && item.LoteSerie !== 'Lote' && item.LoteSerie !== 'Serie');
       return true;
     });
   }, [effectiveItems, searchTerm, filterType]);
@@ -319,7 +324,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
             next[item.ItemCode] = {
               selectedBatches: {},
               selectedSerials: [],
-              standardQty: 1,
+              standardQty: item.WarehouseStock || 0,
             };
           }
         });
@@ -486,7 +491,7 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
           [item.ItemCode]: {
             selectedBatches: {},
             selectedSerials: [],
-            standardQty: 1,
+            standardQty: item.WarehouseStock || 0,
           },
         }));
       }
@@ -801,6 +806,16 @@ export const ConversionView: React.FC<ConversionViewProps> = ({
                   }`}
               >
                 Series
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('none')}
+                className={`px-3 py-1 rounded-lg transition-colors font-medium ${filterType === 'none'
+                  ? theme === 'dark' ? 'bg-sky-500 text-black font-bold' : 'bg-white text-sky-700 shadow-sm font-bold'
+                  : theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                Ninguno
               </button>
             </div>
 
